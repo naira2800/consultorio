@@ -1,0 +1,58 @@
+<%- include('partials/head', { title: 'Gestionar turno' }) %>
+
+<div class="card">
+  <h1>Gestión de turno</h1>
+
+  <ul class="data-list">
+    <li><strong>Paciente:</strong> <%= appt.patient_name %></li>
+    <li><strong>Profesional:</strong> <%= appt.professional_name %>
+      <%= appt.specialty ? '- ' + appt.specialty : '' %></li>
+    <li><strong>Fecha y hora:</strong> <%= whenText %></li>
+    <li><strong>Estado:</strong> <%= appt.status %></li>
+  </ul>
+
+  <% if (message) { %>
+    <div class="alert <%= appt.status === 'cancelled' ? 'success' : 'error' %>"><%= message %></div>
+  <% } %>
+
+  <% if (appt.status === 'cancelled') { %>
+    <p class="muted">Este turno fue anulado. Para solicitar uno nuevo, escríbanos por WhatsApp.</p>
+  <% } else if (appt.status === 'rescheduled') { %>
+    <p class="muted">Este turno fue reprogramado.</p>
+  <% } else if (!canModify) { %>
+    <div class="alert warning">
+      Los turnos solo pueden cambiarse o anularse con al menos <strong>24 horas</strong>
+      de anticipación. Ya no es posible modificar este turno.
+    </div>
+  <% } else { %>
+    <p class="muted">Faltan aproximadamente <%= hoursUntil %> horas para su turno.</p>
+
+    <h2>Anular turno</h2>
+    <form action="/turnos/gestionar/<%= appt.manage_token %>/anular" method="POST"
+          onsubmit="return confirm('¿Confirma que desea anular su turno?');">
+      <button type="submit" class="btn danger">Anular turno</button>
+    </form>
+
+    <h2 style="margin-top:28px;">Reprogramar a otro horario</h2>
+    <% if (slots.length === 0) { %>
+      <p class="muted">No hay otros horarios disponibles para reprogramar en este momento.</p>
+    <% } else { %>
+      <form action="/turnos/gestionar/<%= appt.manage_token %>/reprogramar" method="POST">
+        <div class="slots">
+          <% slots.forEach(function (s) { %>
+            <label class="slot">
+              <input type="radio" name="slot_id" value="<%= s.id %>" required />
+              <span><%= new Date(s.starts_at).toLocaleString('es-AR', {
+                weekday: 'short', day: '2-digit', month: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+              }) %></span>
+            </label>
+          <% }); %>
+        </div>
+        <button type="submit" class="btn">Reprogramar turno</button>
+      </form>
+    <% } %>
+  <% } %>
+</div>
+
+<%- include('partials/foot') %>

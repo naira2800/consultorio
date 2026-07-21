@@ -1,0 +1,16 @@
+<%- include('partials/head', { title: 'Turno confirmado' }) %>
+
+<div class="card center">
+  <div class="big-icon">🎉</div>
+  <h1>¡Turno confirmado!</h1>
+  <p>Su turno quedó registrado para:</p>
+  <p style="font-size:1.25rem;"><strong><%= whenText %></strong></p>
+
+  <p class="muted">
+    Le enviamos la confirmación por WhatsApp. Puede cambiar o anular su turno
+    hasta 24 hs antes desde el siguiente enlace:
+  </p>
+  <a class="btn secondary" href="/turnos/gestionar/<%= manageToken %>">Gestionar mi turno</a>
+</div>
+
+<%- include('partials/foot') %>

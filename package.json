@@ -1,0 +1,30 @@
+{
+  "name": "consultorio-turnos",
+  "version": "1.0.0",
+  "description": "Gestion de turnos de un consultorio medico con interaccion del paciente via WhatsApp",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node scripts/init-db.js",
+    "report:daily": "node scripts/run-daily-report.js"
+  },
+  "keywords": [
+    "consultorio",
+    "turnos",
+    "whatsapp",
+    "citas",
+    "medico"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.14"
+  }
+}

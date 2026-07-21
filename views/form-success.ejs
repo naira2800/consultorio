@@ -1,0 +1,15 @@
+<%- include('partials/head', { title: 'Solicitud enviada' }) %>
+
+<div class="card center">
+  <div class="big-icon">✅</div>
+  <h1>¡Solicitud enviada!</h1>
+  <p>
+    Gracias, <strong><%= patientName %></strong>. Su solicitud fue recibida.
+  </p>
+  <p class="muted">
+    El profesional <strong><%= professionalName %></strong> revisará sus datos y
+    lo contactará por WhatsApp dentro de las 48 hs con los horarios disponibles.
+  </p>
+</div>
+
+<%- include('partials/foot') %>

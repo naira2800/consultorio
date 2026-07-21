@@ -1,0 +1,56 @@
+<%- include('partials/head', { title: 'Formulario del paciente' }) %>
+
+<div class="card">
+  <h1>Formulario de solicitud de turno</h1>
+  <p class="muted">
+    Complete sus datos. El profesional seleccionado lo contactará dentro de las 48 hs.
+  </p>
+
+  <% if (error) { %>
+    <div class="alert error"><%= error %></div>
+  <% } %>
+
+  <form action="/formulario" method="POST" enctype="multipart/form-data">
+    <label>¿Es paciente nuevo o ya es paciente del consultorio?</label>
+    <div class="radio-group">
+      <label><input type="radio" name="patient_type" value="nuevo" checked /> Paciente nuevo</label>
+      <label><input type="radio" name="patient_type" value="existente" /> Ya soy paciente</label>
+    </div>
+
+    <label for="full_name">Nombre y apellido *</label>
+    <input type="text" id="full_name" name="full_name" required />
+
+    <label for="dni">DNI</label>
+    <input type="text" id="dni" name="dni" />
+
+    <label for="phone">Teléfono / WhatsApp (con código de país) *</label>
+    <input type="tel" id="phone" name="phone" placeholder="+5491122334455"
+           value="<%= prefillPhone %>" required />
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" />
+
+    <label for="health_insurance">Obra social / Prepaga</label>
+    <input type="text" id="health_insurance" name="health_insurance" />
+
+    <label for="professional_id">Profesional *</label>
+    <select id="professional_id" name="professional_id" required>
+      <option value="">-- Seleccione un profesional --</option>
+      <% professionals.forEach(function (p) { %>
+        <option value="<%= p.id %>">
+          <%= p.full_name %><%= p.specialty ? ' - ' + p.specialty : '' %>
+        </option>
+      <% }); %>
+    </select>
+
+    <label for="reason">Motivo de la consulta</label>
+    <textarea id="reason" name="reason"></textarea>
+
+    <label for="medical_order">Orden médica (PDF, JPG o PNG)</label>
+    <input type="file" id="medical_order" name="medical_order" accept=".pdf,.jpg,.jpeg,.png" />
+
+    <button type="submit" class="btn">Enviar solicitud</button>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

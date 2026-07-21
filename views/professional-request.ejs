@@ -1,0 +1,45 @@
+<%- include('partials/head', { title: 'Revisión de solicitud' }) %>
+
+<div class="card">
+  <h1>Nueva solicitud de paciente</h1>
+  <p class="muted">Revise los datos del paciente y la orden médica adjunta.</p>
+
+  <ul class="data-list">
+    <li><strong>Paciente:</strong> <%= request.patient_name %>
+      <%= request.is_new ? '(nuevo)' : '(existente)' %></li>
+    <li><strong>DNI:</strong> <%= request.patient_dni || '-' %></li>
+    <li><strong>Teléfono:</strong> <%= request.patient_phone %></li>
+    <li><strong>Email:</strong> <%= request.patient_email || '-' %></li>
+    <li><strong>Obra social:</strong> <%= request.health_insurance || '-' %></li>
+    <li><strong>Profesional:</strong> <%= request.professional_name %>
+      <%= request.specialty ? '- ' + request.specialty : '' %></li>
+    <li><strong>Motivo:</strong> <%= request.reason || '-' %></li>
+    <li><strong>Estado:</strong> <%= request.status %></li>
+  </ul>
+
+  <% if (request.medical_order_file) { %>
+    <p>
+      <a class="btn secondary" href="/uploads/<%= request.medical_order_file %>" target="_blank">
+        Ver orden médica adjunta
+      </a>
+    </p>
+  <% } else { %>
+    <p class="muted">El paciente no adjuntó orden médica.</p>
+  <% } %>
+
+  <% if (request.status === 'pending') { %>
+    <form action="/profesional/solicitud/<%= request.token %>/habilitar" method="POST">
+      <p class="muted">
+        Al confirmar, se enviará al paciente por WhatsApp un enlace con la grilla
+        de horarios disponibles para que elija.
+      </p>
+      <button type="submit" class="btn">Habilitar horarios y avisar al paciente</button>
+    </form>
+  <% } else { %>
+    <div class="alert success">
+      Esta solicitud ya fue procesada (estado: <%= request.status %>).
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,13 @@
+<%- include('partials/head', { title: 'Horarios enviados' }) %>
+
+<div class="card center">
+  <div class="big-icon">📲</div>
+  <h1>Horarios enviados al paciente</h1>
+  <p>
+    Se envió a <strong><%= patientName %></strong> un enlace por WhatsApp con la
+    grilla de horarios disponibles.
+  </p>
+  <p class="muted">Cuando el paciente elija un horario, el turno quedará registrado.</p>
+</div>
+
+<%- include('partials/foot') %>
