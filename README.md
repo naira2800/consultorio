@@ -96,7 +96,19 @@ y `db/seed.sql` automáticamente (queda con datos de ejemplo). La configuración
 por defecto (root sin contraseña) coincide con los valores por defecto de la
 app, así que no necesita `.env` para desarrollar.
 
-**Opción B — MySQL ya instalado:**
+**Opción B — Instalar MySQL en el Codespace / Ubuntu (sin Docker):**
+
+Un único comando instala MySQL, lo arranca, configura el usuario `root` (sin
+contraseña) y carga la base con datos de ejemplo:
+
+```bash
+bash scripts/setup-mysql.sh
+```
+
+> En Codespaces no hay systemd, así que MySQL **no arranca solo** al reiniciar
+> el contenedor. Para volver a levantarlo más tarde: `sudo service mysql start`.
+
+**Opción C — MySQL ya instalado y en ejecución:**
 
 ```bash
 npm run db:init -- --seed  # crea la BD, las tablas y datos de ejemplo
