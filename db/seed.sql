@@ -4,7 +4,7 @@
 USE consultorio;
 
 INSERT INTO professionals (full_name, specialty, email, phone, active) VALUES
-  ('Dra. Ana Gomez',    'Clinica Medica', 'ana.gomez@consultorio.com',    '+5491111111111', 1),
+  ('Dra. Ana Gomez',    'Clinica Medica', 'ana.gomez@consultorio.com',    '+5493487645439', 1),
   ('Dr. Luis Martinez', 'Cardiologia',    'luis.martinez@consultorio.com','+5491122222222', 1),
   ('Dra. Sofia Ruiz',   'Dermatologia',   'sofia.ruiz@consultorio.com',   '+5491133333333', 1);
 
