@@ -1,0 +1,35 @@
+# ==========================================================================
+# MySQL para desarrollo (ideal en Codespaces / contenedores).
+#
+#   docker compose up -d db     # levanta MySQL en localhost:3306
+#   docker compose logs -f db   # ver el arranque
+#   docker compose down         # detener (los datos persisten en el volumen)
+#   docker compose down -v      # detener y borrar los datos
+#
+# Al iniciar por primera vez ejecuta db/schema.sql y db/seed.sql
+# automaticamente, dejando la base "consultorio" lista con datos de ejemplo.
+#
+# La config por defecto (root sin contrasena) coincide con los valores por
+# defecto de la app, por lo que funciona sin necesidad de un archivo .env.
+# ==========================================================================
+services:
+  db:
+    image: mysql:8.0
+    container_name: consultorio-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: consultorio
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:

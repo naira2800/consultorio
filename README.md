@@ -85,6 +85,19 @@ cp .env.example .env       # y complete los valores
 
 ### 3. Base de datos
 
+**Opción A — Docker (recomendada en Codespaces / contenedores):**
+
+```bash
+docker compose up -d db    # levanta MySQL en localhost:3306
+```
+
+Al iniciar por primera vez crea la base `consultorio` y ejecuta `db/schema.sql`
+y `db/seed.sql` automáticamente (queda con datos de ejemplo). La configuración
+por defecto (root sin contraseña) coincide con los valores por defecto de la
+app, así que no necesita `.env` para desarrollar.
+
+**Opción B — MySQL ya instalado:**
+
 ```bash
 npm run db:init -- --seed  # crea la BD, las tablas y datos de ejemplo
 ```
