@@ -53,11 +53,11 @@ async function main() {
   const payload = {
     messaging_product: 'whatsapp',
     to,
-    type: 'text',
-    text: { body: 'Prueba desde el consultorio ✅' },
+    type: 'template',
+    template: { name: 'hello_world', language: { code: 'en_US' } },
   };
 
-  console.log('Enviando texto libre a', to, '...\n');
+  console.log('Enviando TEMPLATE hello_world a', to, '...\n');
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -72,11 +72,10 @@ async function main() {
   console.log('Respuesta de Meta:\n', JSON.stringify(json, null, 2), '\n');
 
   if (res.ok && json.messages) {
-    console.log('✅ Meta ACEPTO el mensaje (id:', json.messages[0].id + ').');
-    console.log('   Si aun asi NO te llega al telefono, la causa mas comun es:');
-    console.log('   - El numero destino no esta en la lista de destinatarios verificados,');
-    console.log('     o no inicio conversacion: para INICIAR hay que usar un TEMPLATE');
-    console.log('     (ej. hello_world), no texto libre.');
+    console.log('✅ Meta ACEPTO el TEMPLATE (id:', json.messages[0].id + ').');
+    console.log('   Como es un template pre-aprobado, DEBERIA llegar al telefono aunque');
+    console.log('   no haya conversacion previa. Revisa el WhatsApp del numero destino:');
+    console.log('   te tiene que llegar un mensaje en ingles "Hello World".');
   } else {
     const err = json.error || {};
     console.log('❌ Meta RECHAZO el mensaje.');
