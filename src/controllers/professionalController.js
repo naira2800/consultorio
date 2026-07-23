@@ -34,7 +34,7 @@ async function enableSlots(req, res, next) {
     await RequestModel.markReviewed(request.id);
 
     const patient = await PatientModel.findById(request.patient_id);
-    await notificationService.sendSlotsLinkToPatient(patient.phone, request.token);
+    await notificationService.sendSlotsLinkToPatient(patient.phone, request.token, patient.full_name);
 
     res.render('professional-sent', {
       patientName: request.patient_name,

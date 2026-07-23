@@ -73,7 +73,7 @@ async function bookSlot(req, res, next) {
     await RequestModel.markScheduled(request.id);
 
     const patient = await PatientModel.findById(request.patient_id);
-    await notificationService.sendAppointmentConfirmation(appointment, patient.phone);
+    await notificationService.sendAppointmentConfirmation(appointment, patient.phone, patient.full_name);
 
     res.render('patient-confirmed', {
       appointment,
@@ -133,7 +133,7 @@ async function cancel(req, res, next) {
       throw err;
     }
 
-    await notificationService.sendAppointmentCancelled(appt.patient_phone, appt.starts_at);
+    await notificationService.sendAppointmentCancelled(appt.patient_phone, appt.starts_at, appt.patient_name);
 
     res.render('patient-manage', {
       appt: { ...appt, status: 'cancelled' },
@@ -170,7 +170,7 @@ async function reschedule(req, res, next) {
       throw err;
     }
 
-    await notificationService.sendAppointmentConfirmation(newAppt, appt.patient_phone);
+    await notificationService.sendAppointmentConfirmation(newAppt, appt.patient_phone, appt.patient_name);
 
     res.render('patient-confirmed', {
       appointment: newAppt,

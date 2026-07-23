@@ -87,6 +87,81 @@ async function sendViaCloud(to, body) {
 }
 
 /**
+ * Envia un mensaje de TEMPLATE por WhatsApp Cloud API.
+ * Los templates son plantillas pre-aprobadas por Meta y son la unica forma de
+ * entregar mensajes que INICIA el negocio (fuera de la ventana de 24 hs).
+ *
+ * @param {string} to           destinatario en E.164
+ * @param {object} opts
+ * @param {string} opts.name        nombre del template aprobado
+ * @param {string} opts.languageCode codigo de idioma (ej. "es_AR")
+ * @param {string[]} opts.bodyParams valores para las variables {{1}}, {{2}}, ...
+ */
+async function sendTemplateViaCloud(to, { name, languageCode, bodyParams }) {
+  const { token, phoneId } = env.whatsapp.cloud;
+  if (!token || !phoneId) {
+    console.warn('[WhatsApp:cloud] Faltan credenciales, se usa modo log.');
+    return sendViaLog(to, `[TEMPLATE ${name}] ${(bodyParams || []).join(' | ')}`);
+  }
+
+  const components =
+    bodyParams && bodyParams.length
+      ? [
+          {
+            type: 'body',
+            parameters: bodyParams.map((t) => ({ type: 'text', text: String(t) })),
+          },
+        ]
+      : [];
+
+  const url = `https://graph.facebook.com/v20.0/${phoneId}/messages`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: normalizePhone(to),
+      type: 'template',
+      template: { name, language: { code: languageCode }, components },
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`WhatsApp Cloud API (template) respondio ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+/**
+ * Envia un template usando el proveedor configurado. En "log" imprime en
+ * consola; en "twilio" (que maneja templates de otra forma) cae a log para no
+ * romper el flujo.
+ */
+async function sendTemplate(to, opts) {
+  if (!to) {
+    console.warn('[WhatsApp] Destinatario vacio, template omitido.');
+    return null;
+  }
+  try {
+    switch (env.whatsapp.provider) {
+      case 'cloud':
+        return await sendTemplateViaCloud(to, opts);
+      case 'twilio':
+      case 'log':
+      default:
+        return await sendViaLog(to, `[TEMPLATE ${opts.name}] ${(opts.bodyParams || []).join(' | ')}`);
+    }
+  } catch (err) {
+    console.error(`[WhatsApp] Error al enviar template a ${to}:`, err.message);
+    return null;
+  }
+}
+
+/**
  * Envia un mensaje de texto por WhatsApp usando el proveedor configurado.
  * Nunca lanza hacia arriba en caso de error de red: registra y continua,
  * para que un fallo de notificacion no rompa el flujo principal.
@@ -112,4 +187,4 @@ async function sendMessage(to, body) {
   }
 }
 
-module.exports = { sendMessage, normalizePhone };
+module.exports = { sendMessage, sendTemplate, normalizePhone };

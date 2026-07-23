@@ -38,6 +38,12 @@ const env = {
       token: process.env.WHATSAPP_CLOUD_TOKEN || '',
       phoneId: process.env.WHATSAPP_CLOUD_PHONE_ID || '',
       verifyToken: process.env.WHATSAPP_CLOUD_VERIFY_TOKEN || 'mi-token-de-verificacion',
+      // Template usado para notificaciones proactivas (que inicia el sistema).
+      // Si esta vacio, se cae a texto libre (solo se entrega dentro de la
+      // ventana de 24 hs). El template debe tener 3 variables en el cuerpo:
+      // {{1}} nombre, {{2}} mensaje, {{3}} enlace.
+      templateName: process.env.WHATSAPP_TEMPLATE_NAME || '',
+      templateLang: process.env.WHATSAPP_TEMPLATE_LANG || 'es_AR',
     },
   },
 
