@@ -2,6 +2,8 @@
 
 const env = require('../config/env');
 const whatsapp = require('./whatsappService');
+const token = require('../utils/token');
+const PatientModel = require('../models/patientModel');
 const { formatDateTime, buildUrl } = require('../utils/format');
 
 /**
@@ -34,21 +36,47 @@ async function sendProactive(to, { name, message, link }, freeform) {
 }
 
 /**
+ * Construye el link al formulario con un token de acceso passwordless (cifrado
+ * y con vencimiento) que representa el telefono del paciente. Asi, al abrir el
+ * link desde su WhatsApp, la app lo reconoce sin pedirle usuario ni clave.
+ */
+function buildFormUrl(patientPhone) {
+  const t = token.sign({ phone: patientPhone }, 48 * 3600); // 48 hs de validez
+  return buildUrl(`/formulario?t=${encodeURIComponent(t)}`);
+}
+
+/**
  * Mensaje de bienvenida automatico que recibe el paciente al escribir por
  * primera vez al WhatsApp del consultorio (paso 1 del flujo).
  * Es una RESPUESTA dentro de la ventana de 24 hs, por eso va como texto libre.
+ *
+ * Si el paciente ya existe, lo saluda por su nombre y le adelanta que sus datos
+ * ya estan cargados; si es nuevo, usa el mensaje estandar solicitado.
  */
-function welcomeMessage() {
-  const formUrl = buildUrl('/formulario');
-  return (
-    'Complete los datos en el formulario y el profesional seleccionado lo ' +
-    'contactara dentro de las 48 hs. Muchas gracias!\n\n' +
-    `Formulario: ${formUrl}`
-  );
-}
-
 async function sendWelcome(patientPhone) {
-  return whatsapp.sendMessage(patientPhone, welcomeMessage());
+  const formUrl = buildFormUrl(patientPhone);
+  let patient = null;
+  try {
+    patient = await PatientModel.findByPhone(patientPhone);
+  } catch (_) {
+    /* si falla la base, seguimos con el mensaje estandar */
+  }
+
+  let body;
+  if (patient) {
+    body =
+      `Hola ${patient.full_name}! Que bueno tenerte de nuevo.\n\n` +
+      'Ya tenemos tus datos cargados. Para pedir un turno, entra al siguiente ' +
+      'enlace y solo elegí el profesional. El profesional seleccionado te ' +
+      'contactará dentro de las 48 hs. Muchas gracias!\n\n' +
+      `${formUrl}`;
+  } else {
+    body =
+      'Complete los datos en el formulario y el profesional seleccionado lo ' +
+      'contactara dentro de las 48 hs. Muchas gracias!\n\n' +
+      `Formulario: ${formUrl}`;
+  }
+  return whatsapp.sendMessage(patientPhone, body);
 }
 
 /**
@@ -135,7 +163,6 @@ async function sendAppointmentCancelled(patientPhone, startsAt, patientName = 'p
 }
 
 module.exports = {
-  welcomeMessage,
   sendWelcome,
   notifyProfessionalNewRequest,
   sendSlotsLinkToPatient,

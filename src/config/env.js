@@ -11,6 +11,10 @@ const env = {
   baseUrl: process.env.APP_BASE_URL || 'http://localhost:3000',
   tz: process.env.TZ || 'America/Argentina/Buenos_Aires',
 
+  // Clave secreta para cifrar/firmar los tokens de acceso passwordless.
+  // IMPORTANTE: en produccion definí un valor propio, largo y aleatorio.
+  appSecret: process.env.APP_SECRET || 'dev-secret-cambialo-en-produccion',
+
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '3306', 10),

@@ -1,41 +1,71 @@
-<%- include('partials/head', { title: 'Formulario del paciente' }) %>
+<%- include('partials/head', { title: 'Pedir un turno' }) %>
+
+<%
+  // known puede ser: null (paciente nuevo/anonimo), un paciente completo
+  // (tiene full_name) o solo { phone } (telefono verificado sin registro aun).
+  var isKnown = known && known.full_name;
+  var val = function (v) { return v ? String(v) : ''; };
+%>
 
 <div class="card">
-  <h1>Formulario de solicitud de turno</h1>
-  <p class="muted">
-    Complete sus datos. El profesional seleccionado lo contactará dentro de las 48 hs.
-  </p>
+  <% if (isKnown) { %>
+    <h1>Hola, <%= known.full_name %> 👋</h1>
+    <p class="lead">
+      Ya tenemos tus datos. Revisá que estén bien, elegí el profesional y
+      tocá el botón. Es todo.
+    </p>
+  <% } else { %>
+    <h1>Pedir un turno</h1>
+    <p class="lead">
+      Complete sus datos. El profesional que elija lo contactará dentro de las 48 horas.
+    </p>
+  <% } %>
 
   <% if (error) { %>
     <div class="alert error"><%= error %></div>
   <% } %>
 
   <form action="/formulario" method="POST" enctype="multipart/form-data">
-    <label>¿Es paciente nuevo o ya es paciente del consultorio?</label>
-    <div class="radio-group">
-      <label><input type="radio" name="patient_type" value="nuevo" checked /> Paciente nuevo</label>
-      <label><input type="radio" name="patient_type" value="existente" /> Ya soy paciente</label>
-    </div>
+    <input type="hidden" name="access_token" value="<%= typeof accessToken !== 'undefined' ? accessToken : '' %>" />
 
-    <label for="full_name">Nombre y apellido *</label>
-    <input type="text" id="full_name" name="full_name" required />
+    <% if (!isKnown) { %>
+      <label>¿Es su primera vez en el consultorio?</label>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="patient_type" value="nuevo" checked /> Sí, soy paciente nuevo</label>
+        <label class="radio-option"><input type="radio" name="patient_type" value="existente" /> No, ya soy paciente</label>
+      </div>
+    <% } else { %>
+      <input type="hidden" name="patient_type" value="existente" />
+    <% } %>
 
-    <label for="dni">DNI</label>
-    <input type="text" id="dni" name="dni" />
+    <label for="full_name">Nombre y apellido</label>
+    <input type="text" id="full_name" name="full_name" autocomplete="name"
+           value="<%= val(known && known.full_name) %>" required />
 
-    <label for="phone">Teléfono / WhatsApp (con código de país) *</label>
-    <input type="tel" id="phone" name="phone" placeholder="+5491122334455"
-           value="<%= prefillPhone %>" required />
+    <label for="phone">Teléfono (WhatsApp)</label>
+    <input type="tel" id="phone" name="phone" inputmode="tel" autocomplete="tel"
+           placeholder="+5493487645439"
+           value="<%= val((known && known.phone) || prefillPhone) %>"
+           <%= isKnown ? 'readonly' : '' %> required />
+    <% if (isKnown) { %>
+      <p class="hint">Este es el número desde el que nos escribiste. No hace falta cambiarlo.</p>
+    <% } %>
 
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" />
+    <label for="dni">DNI <span class="optional">(opcional)</span></label>
+    <input type="text" id="dni" name="dni" inputmode="numeric"
+           value="<%= val(known && known.dni) %>" />
 
-    <label for="health_insurance">Obra social / Prepaga</label>
-    <input type="text" id="health_insurance" name="health_insurance" />
+    <label for="email">Correo electrónico <span class="optional">(opcional)</span></label>
+    <input type="email" id="email" name="email" autocomplete="email"
+           value="<%= val(known && known.email) %>" />
 
-    <label for="professional_id">Profesional *</label>
+    <label for="health_insurance">Obra social o prepaga <span class="optional">(opcional)</span></label>
+    <input type="text" id="health_insurance" name="health_insurance"
+           value="<%= val(known && known.health_insurance) %>" />
+
+    <label for="professional_id">Profesional que desea ver</label>
     <select id="professional_id" name="professional_id" required>
-      <option value="">-- Seleccione un profesional --</option>
+      <option value="">— Elija un profesional —</option>
       <% professionals.forEach(function (p) { %>
         <option value="<%= p.id %>">
           <%= p.full_name %><%= p.specialty ? ' - ' + p.specialty : '' %>
@@ -43,13 +73,14 @@
       <% }); %>
     </select>
 
-    <label for="reason">Motivo de la consulta</label>
+    <label for="reason">Motivo de la consulta <span class="optional">(opcional)</span></label>
     <textarea id="reason" name="reason"></textarea>
 
-    <label for="medical_order">Orden médica (PDF, JPG o PNG)</label>
+    <label for="medical_order">Orden médica <span class="optional">(opcional)</span></label>
+    <p class="hint">Puede sacarle una foto con el celular. Acepta PDF, JPG o PNG.</p>
     <input type="file" id="medical_order" name="medical_order" accept=".pdf,.jpg,.jpeg,.png" />
 
-    <button type="submit" class="btn">Enviar solicitud</button>
+    <button type="submit" class="btn btn-big">Enviar solicitud de turno</button>
   </form>
 </div>
 

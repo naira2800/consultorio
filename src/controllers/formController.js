@@ -4,18 +4,38 @@ const ProfessionalModel = require('../models/professionalModel');
 const PatientModel = require('../models/patientModel');
 const RequestModel = require('../models/requestModel');
 const notificationService = require('../services/notificationService');
+const token = require('../utils/token');
+
+/**
+ * Reconoce a un paciente a partir del token de acceso passwordless (?t=).
+ * Devuelve el paciente si el token es valido, no vencio y existe en la base;
+ * o { phone } si el telefono esta verificado pero aun no hay registro.
+ */
+async function resolveKnownPatient(req) {
+  const t = req.query.t;
+  if (!t) return null;
+  const data = token.verify(t);
+  if (!data || !data.phone) return null;
+  const patient = await PatientModel.findByPhone(data.phone);
+  return patient || { phone: data.phone };
+}
 
 /**
  * Paso 1/2: muestra el formulario para que el paciente complete sus datos.
  * Pregunta primero si es paciente nuevo o existente, y permite elegir profesional.
- * Acepta ?phone= para precargar el telefono provisto por el webhook de WhatsApp.
+ *
+ * Si llega con un token valido (?t=), reconoce al paciente y precarga sus datos
+ * para que no tenga que volver a escribirlos ni loguearse.
  */
 async function showForm(req, res, next) {
   try {
     const professionals = await ProfessionalModel.findAllActive();
+    const known = await resolveKnownPatient(req);
     res.render('form', {
       professionals,
-      prefillPhone: req.query.phone || '',
+      known,
+      accessToken: req.query.t || '',
+      prefillPhone: (known && known.phone) || req.query.phone || '',
       error: null,
     });
   } catch (err) {
@@ -44,10 +64,13 @@ async function submitForm(req, res, next) {
     const professional = await ProfessionalModel.findById(professional_id);
     if (!full_name || !phone || !professional) {
       const professionals = await ProfessionalModel.findAllActive();
+      const known = phone ? await PatientModel.findByPhone(phone) : null;
       return res.status(400).render('form', {
         professionals,
+        known,
+        accessToken: req.body.access_token || '',
         prefillPhone: phone || '',
-        error: 'Complete nombre, telefono y seleccione un profesional valido.',
+        error: 'Complete su nombre, su teléfono y seleccione un profesional.',
       });
     }
 
