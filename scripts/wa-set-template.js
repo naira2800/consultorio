@@ -56,20 +56,43 @@ async function main() {
   }
 
   const all = json.data || [];
+  // Nombre exacto opcional como 3er argumento: node wa-set-template.js <WABA> <nombre>
+  const wantedName = process.argv[3];
+
   const approved = all.filter((t) => t.status === 'APPROVED' && t.name !== 'hello_world');
 
   if (approved.length === 0) {
     console.log('❌ No hay templates APPROVED (aparte de hello_world) en esta cuenta.');
-    console.log('   Templates encontrados:');
+    console.log('   Templates encontrados (con su estado):');
     all.forEach((t) => console.log(`   - ${t.name} (${t.language}) ${t.status}`));
+    console.log('\n   Si el tuyo figura como PENDING, espera a que Meta lo apruebe.');
     process.exit(1);
   }
 
-  // Si hay mas de uno, usamos el primero pero avisamos.
-  const chosen = approved[0];
+  // Eleccion del template:
+  //  1) el nombre exacto pasado por argumento, si se indico;
+  //  2) el que contenga "consultorio" (el de esta app), ignorando los de ejemplo;
+  //  3) como ultimo recurso, el primero aprobado.
+  let chosen;
+  if (wantedName) {
+    chosen = approved.find((t) => t.name === wantedName);
+    if (!chosen) {
+      console.log(`❌ No se encontro un template APPROVED llamado "${wantedName}".`);
+      console.log('   Aprobados disponibles:');
+      approved.forEach((t) => console.log(`   - ${t.name} (${t.language})`));
+      process.exit(1);
+    }
+  } else {
+    chosen =
+      approved.find((t) => /consultorio/i.test(t.name)) ||
+      approved.find((t) => !/^jaspers_market/i.test(t.name)) ||
+      approved[0];
+  }
+
   if (approved.length > 1) {
-    console.log('ℹ  Hay varios templates aprobados; se usa el primero:');
-    approved.forEach((t, i) => console.log(`   ${i === 0 ? '->' : '  '} ${t.name} (${t.language})`));
+    console.log('ℹ  Templates aprobados en la cuenta (se eligio el marcado con ->):');
+    approved.forEach((t) => console.log(`   ${t.name === chosen.name ? '->' : '  '} ${t.name} (${t.language})`));
+    console.log('');
   }
 
   let content = fs.existsSync(ENV_PATH) ? fs.readFileSync(ENV_PATH, 'utf8') : '';
