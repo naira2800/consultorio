@@ -66,8 +66,38 @@ async function main() {
     console.log('  Categoria                      :', t.category);
   });
   console.log('===========================================================\n');
-  console.log('Copia EXACTAMENTE el NOMBRE y el IDIOMA de un template APPROVED');
-  console.log('a tu .env (WHATSAPP_TEMPLATE_NAME y WHATSAPP_TEMPLATE_LANG).');
+
+  // ---- Verificacion clave: el numero de envio debe pertenecer a ESTA WABA ----
+  const phonesUrl =
+    `https://graph.facebook.com/v20.0/${wabaId}/phone_numbers` +
+    `?fields=id,display_phone_number,verified_name&limit=50`;
+  const pres = await fetch(phonesUrl, { headers: { Authorization: `Bearer ${token}` } });
+  const pjson = await pres.json().catch(() => ({}));
+  const phones = pjson.data || [];
+  const configuredId = env.whatsapp.cloud.phoneId;
+
+  console.log('====== Numeros de telefono en ESTA cuenta (WABA) ======');
+  if (phones.length === 0) {
+    console.log('  (ninguno o sin permiso para listarlos)');
+  }
+  phones.forEach((p) => {
+    const mark = String(p.id) === String(configuredId) ? '  <-- el que usa tu .env' : '';
+    console.log(`  Phone ID: ${p.id}  (${p.display_phone_number || '?'})${mark}`);
+  });
+  console.log('=======================================================\n');
+
+  const match = phones.some((p) => String(p.id) === String(configuredId));
+  console.log(`WHATSAPP_CLOUD_PHONE_ID configurado: ${configuredId}`);
+  if (match) {
+    console.log('✅ El numero de envio pertenece a esta WABA: el template deberia funcionar.');
+    console.log('   Copia EXACTAMENTE el NOMBRE y el IDIOMA de un template APPROVED al .env.');
+  } else {
+    console.log('❌ PROBLEMA ENCONTRADO: el WHATSAPP_CLOUD_PHONE_ID NO pertenece a esta WABA.');
+    console.log('   El template vive en esta WABA, pero estas enviando desde un numero de OTRA');
+    console.log('   cuenta -> por eso Meta responde 132001 aunque el template exista.');
+    console.log('   Solucion: usa el Phone ID que aparece en la lista de arriba (el de ESTA');
+    console.log('   WABA), o crea el template en la WABA a la que pertenece tu numero.');
+  }
 }
 
 main().catch((e) => {
