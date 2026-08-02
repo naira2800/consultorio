@@ -1,6 +1,30 @@
 'use strict';
 
+const fs = require('fs');
 require('dotenv').config();
+
+/**
+ * Arma la configuracion SSL para MySQL:
+ *  - Si hay un certificado CA (DB_CA_CERT = ruta al archivo .pem), lo usa y
+ *    VERIFICA el servidor (lo mas seguro; recomendado para Aiven).
+ *  - Si no, pero DB_SSL=true, cifra la conexion sin verificar el certificado.
+ *  - Si nada de eso, no usa SSL (base local).
+ * Devuelve el objeto ssl para mysql2, o null.
+ */
+function buildDbSsl() {
+  const caPath = process.env.DB_CA_CERT || '';
+  if (caPath) {
+    try {
+      return { ca: fs.readFileSync(caPath, 'utf8'), rejectUnauthorized: true };
+    } catch (err) {
+      console.warn(`[env] No se pudo leer DB_CA_CERT (${caPath}): ${err.message}`);
+    }
+  }
+  if (String(process.env.DB_SSL || 'false') === 'true') {
+    return { rejectUnauthorized: false };
+  }
+  return null;
+}
 
 /**
  * Centraliza la lectura de variables de entorno con valores por defecto
@@ -21,8 +45,8 @@ const env = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'consultorio',
-    // Poner DB_SSL=true si el proveedor remoto exige conexion cifrada (ej. Aiven).
-    ssl: String(process.env.DB_SSL || 'false') === 'true',
+    // Objeto ssl para mysql2 (o null). Ver buildDbSsl() arriba.
+    ssl: buildDbSsl(),
   },
 
   report: {

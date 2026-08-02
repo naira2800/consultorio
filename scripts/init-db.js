@@ -26,7 +26,7 @@ function stripDbStatements(sql) {
     .join('\n');
 }
 
-const sslOption = env.db.ssl ? { ssl: { rejectUnauthorized: false } } : {};
+const sslOption = env.db.ssl ? { ssl: env.db.ssl } : {};
 
 async function run() {
   const withSeed = process.argv.includes('--seed');
