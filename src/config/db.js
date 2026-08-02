@@ -18,6 +18,8 @@ const pool = mysql.createPool({
   queueLimit: 0,
   timezone: 'local',
   dateStrings: false,
+  // Conexion cifrada para proveedores remotos que la exigen (DB_SSL=true).
+  ...(env.db.ssl ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 /**

@@ -21,6 +21,8 @@ const env = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'consultorio',
+    // Poner DB_SSL=true si el proveedor remoto exige conexion cifrada (ej. Aiven).
+    ssl: String(process.env.DB_SSL || 'false') === 'true',
   },
 
   report: {
