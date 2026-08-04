@@ -21,9 +21,11 @@ const env = require('../src/config/env');
  */
 function stripDbStatements(sql) {
   return sql
-    .split('\n')
-    .filter((line) => !/^\s*(CREATE\s+DATABASE|USE)\b/i.test(line))
-    .join('\n');
+    // Quita el statement completo CREATE DATABASE ... ; (puede ocupar varias
+    // lineas, ej. con CHARACTER SET / COLLATE antes del punto y coma).
+    .replace(/CREATE\s+DATABASE[\s\S]*?;/gi, '')
+    // Quita USE nombre_de_base;
+    .replace(/^\s*USE\s+\S+\s*;\s*$/gim, '');
 }
 
 const sslOption = env.db.ssl ? { ssl: env.db.ssl } : {};
