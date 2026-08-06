@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { upload } = require('../middleware/upload');
+const { uploadMedicalOrder } = require('../middleware/upload');
 const whatsappController = require('../controllers/whatsappController');
 const formController = require('../controllers/formController');
 const professionalController = require('../controllers/professionalController');
@@ -22,7 +22,7 @@ router.post('/webhook/whatsapp', whatsappController.handleIncoming);
 
 // -------- Formulario del paciente (pasos 1 y 2) --------
 router.get('/formulario', formController.showForm);
-router.post('/formulario', upload.single('medical_order'), formController.submitForm);
+router.post('/formulario', uploadMedicalOrder, formController.submitForm);
 
 // -------- Vista del profesional (pasos 3 y 4) --------
 router.get('/profesional/solicitud/:token', professionalController.showRequest);

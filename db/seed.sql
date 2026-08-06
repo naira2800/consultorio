@@ -9,9 +9,9 @@
 USE consultorio;
 
 INSERT IGNORE INTO professionals (full_name, specialty, email, phone, active) VALUES
-  ('Dra. Ana Gomez',    'Clinica Medica', 'ana.gomez@consultorio.com',    '+543487645439', 1),
-  ('Dr. Luis Martinez', 'Cardiologia',    'luis.martinez@consultorio.com','+541122222222', 1),
-  ('Dra. Sofia Ruiz',   'Dermatologia',   'sofia.ruiz@consultorio.com',   '+591133333333', 1);
+  ('Lic. Ana Gomez',    'kinesiologia', 'ana.gomez@consultorio.com',    '+543487645439', 1),
+  ('Lic. Luis Martinez', 'kinesiologia',    'luis.martinez@consultorio.com','+541122222222', 1),
+  ('Lic. Sofia Ruiz',   'osteopatia',   'sofia.ruiz@consultorio.com',   '+591133333333', 1);
 
 -- Genera algunos horarios disponibles para manana y pasado, de 09 a 12 hs.
 INSERT IGNORE INTO slots (professional_id, starts_at, duration_min, status)
