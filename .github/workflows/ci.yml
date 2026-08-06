@@ -1,0 +1,35 @@
+name: CI
+
+# Se ejecuta en cada push (a cualquier rama) y en cada Pull Request hacia main.
+# No requiere secretos: solo instala dependencias y valida que el codigo este
+# sano, sin conectarse a la base de datos, WhatsApp ni email reales.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  verificar:
+    name: Instalar dependencias y validar sintaxis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias (npm ci)
+        run: npm ci
+
+      - name: Verificar sintaxis de todo el codigo fuente
+        run: |
+          find src scripts -name "*.js" -print0 | xargs -0 -n1 node -c
+
+      - name: Verificar que la app carga sin errores (sin conectar a servicios externos)
+        run: node -e "require('./src/app'); console.log('OK: la app carga correctamente');"
