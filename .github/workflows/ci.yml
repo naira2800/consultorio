@@ -1,8 +1,14 @@
-name: CI
+name: CI/CD
 
-# Se ejecuta en cada push (a cualquier rama) y en cada Pull Request hacia main.
-# No requiere secretos: solo instala dependencias y valida que el codigo este
-# sano, sin conectarse a la base de datos, WhatsApp ni email reales.
+# Flujo completo:
+#   push -> este workflow se dispara solo
+#        -> job "verificar": instala dependencias y valida el codigo (sin secretos)
+#        -> si "verificar" paso Y el push fue a main: job "desplegar"
+#           pide a Doppler (gestor de secretos) el token de Railway
+#           y dispara el deploy de la nueva version.
+#
+# El job "desplegar" SOLO corre en push a "main", nunca en Pull Requests ni en
+# otras ramas, para que produccion solo se actualice desde codigo ya revisado.
 on:
   push:
     branches: ["**"]
@@ -32,4 +38,33 @@ jobs:
           find src scripts -name "*.js" -print0 | xargs -0 -n1 node -c
 
       - name: Verificar que la app carga sin errores (sin conectar a servicios externos)
-        run: node -e "require('./src/app'); console.log('OK: la app carga correctamente');"
+        run: |
+          node -e "require('./src/app'); console.log('OK: la app carga correctamente');"
+
+  desplegar:
+    name: Desplegar a Railway (secretos desde Doppler)
+    needs: verificar
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    # DOPPLER_TOKEN es el UNICO secreto que vive en GitHub Actions: la "llave
+    # raiz" para pedirle el resto a Doppler (Railway token, DB, WhatsApp, etc.
+    # no hace falta repetirlos aca, Doppler es la fuente unica de verdad).
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar el CLI de Doppler
+        uses: dopplerhq/cli-action@v3
+
+      - name: Instalar el CLI de Railway
+        run: npm install -g @railway/cli
+
+      # "doppler run --" ejecuta el comando con TODOS los secretos de la config
+      # de Doppler inyectados como variables de entorno (incluye RAILWAY_TOKEN
+      # y RAILWAY_SERVICE, que deben cargarse en Doppler; ver docs/deploy.md).
+      - name: Desplegar a Railway
+        run: doppler run -- railway up --service "$RAILWAY_SERVICE" --detach
