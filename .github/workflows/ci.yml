@@ -63,6 +63,22 @@ jobs:
       - name: Instalar el CLI de Railway
         run: npm install -g @railway/cli
 
+      # PASO TEMPORAL DE DIAGNOSTICO: no expone valores secretos, solo confirma
+      # si Doppler esta inyectando las variables y a que proyecto/servicio "ve"
+      # el token de Railway. Se saca una vez resuelto el problema.
+      - name: Diagnostico (temporal)
+        run: |
+          echo "Largo de RAILWAY_SERVICE (0 = no llego el valor):"
+          doppler run -- bash -c 'echo -n "$RAILWAY_SERVICE" | wc -c'
+          echo "Valor de RAILWAY_SERVICE entre corchetes (para detectar espacios ocultos):"
+          doppler run -- bash -c 'echo "[$RAILWAY_SERVICE]"'
+          echo "Largo de RAILWAY_TOKEN (0 = no llego el valor):"
+          doppler run -- bash -c 'echo -n "$RAILWAY_TOKEN" | wc -c'
+          echo "Que ve el token de Railway (proyecto/entorno/servicio vinculado):"
+          doppler run -- railway status || true
+          echo "Identidad autenticada en Railway:"
+          doppler run -- railway whoami || true
+
       # "doppler run --" ejecuta el comando con TODOS los secretos de la config
       # de Doppler inyectados como variables de entorno (incluye RAILWAY_TOKEN
       # y RAILWAY_SERVICE, que deben cargarse en Doppler; ver docs/deploy.md).
