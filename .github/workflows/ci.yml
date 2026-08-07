@@ -80,15 +80,16 @@ jobs:
           doppler run -- railway whoami || true
 
       # "doppler run --" ejecuta el comando con TODOS los secretos de la config
-      # de Doppler inyectados como variables de entorno (incluye RAILWAY_TOKEN
-      # y RAILWAY_SERVICE; ver docs/deploy.md). Ni el nombre ni el ID del
-      # servicio funcionaron solos con --service: se agrega tambien --project
-      # (Project ID confirmado por 'railway status') para descartar ambiguedad
-      # por falta de contexto completo.
+      # de Doppler inyectados como variables de entorno (ver docs/deploy.md).
+      #
+      # IMPORTANTE: el flag --service SIEMPRE devolvio "Service not found" sin
+      # importar el valor (nombre o ID). Se lo saca por completo. En su lugar
+      # se especifican --project y --environment (ambos IDs confirmados por
+      # 'railway status'), que deberian bastar para resolver sin ambiguedad ya
+      # que el proyecto tiene un unico servicio.
       - name: Desplegar a Railway
         run: |
           doppler run -- railway up \
             --project def188c3-c034-42a2-af7d-5fc02b5b8514 \
             --environment production \
-            --service "$RAILWAY_SERVICE" \
             --detach
