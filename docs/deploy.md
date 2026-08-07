@@ -101,3 +101,46 @@ Y mirá la pestaña **Actions** del repo en GitHub: vas a ver primero el job
 - Si en el futuro rotás un secreto (ej. el token de WhatsApp), se actualiza
   **una sola vez en Doppler** y se propaga solo a Railway. GitHub Actions ni
   se entera del cambio (solo usa su `DOPPLER_TOKEN`, que no cambia).
+- El proyecto de Railway (`gallant-analysis`) y el servicio (`tu-bienestar-app`,
+  ID `5ad386ff-d61b-4c2f-a962-af9106a980ff`) quedan **hardcodeados** como
+  `--project`/`--service` en el comando de deploy dentro de `ci.yml`. Si algún
+  día recreás el servicio o el proyecto en Railway, hay que actualizar esos
+  dos IDs ahí (se consiguen con `railway status` desde un paso de diagnóstico,
+  o de la URL del servicio en el panel de Railway:
+  `.../project/<PROJECT_ID>/service/<SERVICE_ID>`).
+
+## Bug resuelto: "Service not found" pese a tener todo bien configurado
+
+Durante la puesta a punto, el deploy fallaba siempre con `Service not found`
+(o `Multiple services found` si se omitía `--service`), **sin importar** si
+`--service` recibía el nombre correcto del servicio, su ID, o si además se
+agregaban `--project`/`--environment`. La causa no era de configuración sino
+de **cómo Bash expande variables**:
+
+```bash
+# MAL — esto SIEMPRE mandaba --service "" (vacio) a Railway:
+doppler run -- railway up --service "$RAILWAY_SERVICE" --detach
+```
+
+`"$RAILWAY_SERVICE"` se expande en el **shell exterior** que ejecuta la línea
+completa (el del runner de GitHub Actions), **antes** de que `doppler run`
+llegue siquiera a arrancar. Ese shell exterior nunca tuvo `RAILWAY_SERVICE`
+seteada — solo la tiene el **proceso hijo** que `doppler run` lanza. Resultado:
+el valor real cargado en Doppler nunca llegaba a usarse; Railway siempre
+recibía un string vacío y por eso "no encontraba" nada, sin importar qué se
+hubiera cargado.
+
+**La solución** es envolver el comando real dentro de `bash -c '...'` (con
+comillas **simples**), para que la expansión de `$RAILWAY_SERVICE` ocurra
+recién **dentro** del proceso hijo que sí tiene la variable inyectada:
+
+```bash
+# BIEN — la variable se expande DENTRO del proceso que doppler run inyecta:
+doppler run -- bash -c '
+  railway up --service "$RAILWAY_SERVICE" --detach
+'
+```
+
+Si en el futuro se agrega alguna otra variable de Doppler a un comando dentro
+de este workflow, hay que aplicar el mismo patrón (`bash -c` con comillas
+simples) para evitar repetir este mismo problema.
