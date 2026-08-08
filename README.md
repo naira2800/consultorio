@@ -193,3 +193,5 @@ curl -X POST http://localhost:3000/admin/reporte-diario
   los links enviados por WhatsApp, evitando exponer IDs secuenciales.
 - **Tolerancia a fallos de notificación**: un error al enviar WhatsApp/email se
   registra pero no interrumpe el flujo principal del turno.
+
+  PRUEBA
