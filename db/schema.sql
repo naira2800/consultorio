@@ -30,14 +30,17 @@ CREATE TABLE IF NOT EXISTS professionals (
 CREATE TABLE IF NOT EXISTS patients (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   full_name     VARCHAR(150)  NOT NULL,
+  -- Identidad estable del paciente (no cambia de titular como el telefono).
+  -- Opcional en el formulario, por eso NULL; unico cuando esta presente.
   dni           VARCHAR(20)   NULL,
-  -- Numero de WhatsApp en formato E.164
+  -- Numero de WhatsApp en formato E.164. NO es unico: puede reciclarse a
+  -- otro titular con el tiempo, por eso la identidad se basa en el DNI.
   phone         VARCHAR(30)   NOT NULL,
   email         VARCHAR(150)  NULL,
   health_insurance VARCHAR(120) NULL,        -- obra social / prepaga
   is_new        TINYINT(1)    NOT NULL DEFAULT 1,
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_patient_phone (phone)
+  UNIQUE KEY uq_patient_dni (dni)
 ) ENGINE=InnoDB;
 
 -- --------------------------------------------------------------------------

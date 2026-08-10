@@ -13,20 +13,32 @@ const PatientModel = {
     return rows[0] || null;
   },
 
+  async findByDni(dni) {
+    if (!dni) return null;
+    const [rows] = await pool.query('SELECT * FROM patients WHERE dni = ?', [dni]);
+    return rows[0] || null;
+  },
+
   /**
-   * Crea el paciente o actualiza sus datos si ya existe (identificado por telefono).
+   * Crea el paciente o actualiza sus datos si ya existe.
+   * Identidad del paciente: prioriza el DNI (estable, no cambia de titular);
+   * si no vino DNI (es opcional en el formulario), usa el telefono como
+   * respaldo para no duplicar al paciente. El telefono SI se actualiza en
+   * cada envio, para que un cambio de numero quede reflejado.
    * Cumple el requisito de "Registro de Usuarios".
    */
   async upsert({ full_name, dni, phone, email, health_insurance, is_new }) {
-    const existing = await this.findByPhone(phone);
+    const existing = (dni && (await this.findByDni(dni))) || (await this.findByPhone(phone));
+
     if (existing) {
       await pool.execute(
         `UPDATE patients
-            SET full_name = ?, dni = ?, email = ?, health_insurance = ?, is_new = ?
+            SET full_name = ?, dni = ?, phone = ?, email = ?, health_insurance = ?, is_new = ?
           WHERE id = ?`,
         [
           full_name,
-          dni || null,
+          dni || existing.dni || null,
+          phone,
           email || null,
           health_insurance || null,
           is_new ? 1 : 0,
